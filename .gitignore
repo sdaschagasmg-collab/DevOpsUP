@@ -1,0 +1,44 @@
+## .NET
+bin/
+obj/
+out/
+*.user
+*.suo
+.vs/
+
+## Rider / VS Code
+.idea/
+.vscode/
+
+## Build results
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+x64/
+x86/
+build/
+bld/
+
+## Test results
+[Tt]est[Rr]esult*/
+*.trx
+*.coverage
+*.coveragexml
+
+## Docker
+docker-compose.override.yml
+
+## Environment / secrets (NUNCA subir esto)
+.env
+*.env.local
+appsettings.Development.json
+appsettings.*.local.json
+
+## OS
+.DS_Store
+Thumbs.db
+
+## Logs
+*.log
+logs/
