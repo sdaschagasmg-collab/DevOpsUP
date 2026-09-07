@@ -96,6 +96,13 @@ El repositorio cuenta con un workflow de GitHub Actions que se ejecuta automáti
 
 Un Pull Request solo puede mergearse si este pipeline finaliza exitosamente.
 
+## Estrategia de versionado
+
+El proyecto utiliza Semantic Versioning (SemVer) para el etiquetado de releases, con el formato MAJOR.MINOR.PATCH (ej: v1.0.0):
+- MAJOR: cambios incompatibles en la API.
+- MINOR: nuevas funcionalidades compatibles con versiones anteriores.
+- PATCH: correcciones de errores compatibles con versiones anteriores.
+
 ## Autor Sebastián Das Chagas
 
 Trabajo Práctico desarrollado para la materia DevOps — Universidad de Palermo.
