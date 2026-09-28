@@ -103,6 +103,58 @@ El proyecto utiliza Semantic Versioning (SemVer) para el etiquetado de releases,
 - MINOR: nuevas funcionalidades compatibles con versiones anteriores.
 - PATCH: correcciones de errores compatibles con versiones anteriores.
 
+## Publicación Docker
+
+El proyecto cuenta con un workflow de GitHub Actions para construir y publicar automáticamente la imagen Docker en Docker Hub.
+
+### Publicación automática
+
+El workflow `.github/workflows/docker-publish.yml` se ejecuta automáticamente cuando se publica un tag con formato SemVer, por ejemplo:
+
+```text
+v1.0.1
+```
+
+El workflow realiza las siguientes tareas:
+
+- Inicia sesión en Docker Hub.
+- Construye la imagen utilizando el `Dockerfile`.
+- Publica la imagen con el mismo tag de la versión.
+- Publica la imagen en Docker Hub.
+
+### Imagen Docker
+
+La imagen publicada está disponible en:
+
+```text
+sdcsoftsolutions/devopsup:v1.0.1
+```
+
+Para descargarla:
+
+```bash
+docker pull sdcsoftsolutions/devopsup:v1.0.1
+```
+
+Para ejecutar la imagen:
+
+```bash
+docker run -p 8080:8080 sdcsoftsolutions/devopsup:v1.0.1
+```
+
+Luego, la API estará disponible en:
+
+```text
+http://localhost:8080
+```
+
+### Secretos de GitHub Actions
+
+La publicación en Docker Hub utiliza los siguientes secretos configurados en GitHub:
+
+- `DOCKERHUB_USERNAME`
+- `DOCKERHUB_TOKEN`
+
 ## Autor Sebastián Das Chagas
 
 Trabajo Práctico desarrollado para la materia DevOps — Universidad de Palermo.
