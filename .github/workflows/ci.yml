@@ -6,8 +6,8 @@ on:
       - main
 
 jobs:
-  build-and-test:
-    name: Build and Test
+  lint:
+    name: Lint
     runs-on: ubuntu-latest
 
     steps:
@@ -25,8 +25,41 @@ jobs:
       - name: Check formatting
         run: dotnet format DevOpsUP.slnx --verify-no-changes
 
-      - name: Build solution
-        run: dotnet build DevOpsUP.slnx --configuration Release --no-restore
+  test:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Restore dependencies
+        run: dotnet restore DevOpsUP.slnx
 
       - name: Run tests
-        run: dotnet test DevOpsUP.slnx --configuration Release --no-build --verbosity normal
+        run: dotnet test DevOpsUP.slnx --configuration Release --no-restore --verbosity normal
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    needs: [lint, test]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Restore dependencies
+        run: dotnet restore DevOpsUP.slnx
+
+      - name: Build solution
+        run: dotnet build DevOpsUP.slnx --configuration Release --no-restore
