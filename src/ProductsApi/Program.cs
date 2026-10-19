@@ -1,9 +1,12 @@
+using OpenTelemetry.Metrics;
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
 using ProductsApi.Middleware;
 using ProductsApi.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Logs de la app (ILogger) también en JSON
+// Logs JSON para la app
 builder.Logging.ClearProviders();
 builder.Logging.AddJsonConsole(options =>
 {
@@ -11,6 +14,22 @@ builder.Logging.AddJsonConsole(options =>
     options.TimestampFormat = "O";
 });
 
+// OpenTelemetry
+builder.Services.AddOpenTelemetry()
+    .ConfigureResource(resource => resource.AddService(serviceName: "ProductsApi"))
+    .WithTracing(tracing =>
+    {
+        tracing
+            .AddAspNetCoreInstrumentation()
+            .AddOtlpExporter();
+    })
+    .WithMetrics(metrics =>
+    {
+        metrics
+            .AddAspNetCoreInstrumentation()
+            .AddRuntimeInstrumentation()
+            .AddOtlpExporter();
+    });
 
 // Add services to the container.
 builder.Services.AddControllers();
@@ -18,12 +37,12 @@ builder.Services.AddOpenApi();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// Servicio de productos en memoria (Singleton: debe persistir los datos entre requests)
+// Servicio de productos en memoria
 builder.Services.AddSingleton<IProductService, InMemoryProductService>();
 
 var app = builder.Build();
 
-// Log estructurado JSON por cada request (debe ir primero en el pipeline)
+// Middleware propio de logs JSON por request
 app.UseMiddleware<JsonRequestLoggingMiddleware>();
 
 // Configure the HTTP request pipeline.
