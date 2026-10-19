@@ -29,11 +29,11 @@ API REST de gestión de productos desarrollada como Trabajo Práctico Integrador
 
 ## Estructura del proyecto
 
-```
+```text
 DevOpsUP/
 ├── .github/workflows/
 │   ├── ci.yml                             # CI: lint, tests y build en cada PR
-│   └── docker-publish.yml                 # Build y push a Docker Hub al publicar un tag vX.Y.Z
+│   └── docker-publish.yml                 # Build, push a Docker Hub y deploy hook de Render al publicar tag vX.Y.Z
 ├── docs/evidencias/                       # Capturas usadas en el informe
 ├── grafana/dashboards/
 │   └── products-api-golden-signals.json   # Dashboard personalizado (Golden Signals)
@@ -71,7 +71,7 @@ dotnet run --project src/ProductsApi
 
 La API queda disponible en la URL indicada en consola (por defecto sería algo como `https://localhost:xxxx`). También se puede explorar y probar todos los endpoints desde Swagger UI, disponible en:
 
-```
+```text
 https://localhost:xxxx/swagger
 ```
 
@@ -181,9 +181,9 @@ El proyecto utiliza Semantic Versioning (SemVer) para el etiquetado de releases,
 
 Cada versión se publica como un **Release de GitHub** asociado a un tag `vX.Y.Z` sobre `main`. Ese tag es el que dispara la publicación de la imagen Docker, de modo que el artefacto en Docker Hub queda trazable a un release y a un commit concretos.
 
-La última versión publicada es **`v1.0.2`**.
+La última versión publicada es **`v1.0.3`**.
 
-![Release v1.0.2 en GitHub](docs/evidencias/release-v1.0.2.png)
+![Release v1.0.3 en GitHub](docs/evidencias/release-v1.0.3.png)
 
 ## Publicación Docker
 
@@ -194,7 +194,7 @@ El proyecto cuenta con un workflow de GitHub Actions que construye y publica aut
 El workflow `.github/workflows/docker-publish.yml` se ejecuta automáticamente cuando se publica un tag con formato SemVer, por ejemplo:
 
 ```text
-v1.0.2
+v1.0.3
 ```
 
 El workflow realiza las siguientes tareas:
@@ -202,25 +202,26 @@ El workflow realiza las siguientes tareas:
 - Inicia sesión en Docker Hub.
 - Construye la imagen utilizando el `Dockerfile`.
 - Publica la imagen en Docker Hub con el mismo tag de la versión.
+- Dispara el **Deploy Hook de Render** pasando `imgURL` con la imagen recién publicada.
 
 ### Imagen Docker
 
 La imagen publicada está disponible en:
 
 ```text
-sdcsoftsolutions/devopsup:v1.0.2
+sdcsoftsolutions/devopsup:v1.0.3
 ```
 
 Para descargarla:
 
 ```bash
-docker pull sdcsoftsolutions/devopsup:v1.0.2
+docker pull sdcsoftsolutions/devopsup:v1.0.3
 ```
 
 Para ejecutar la imagen:
 
 ```bash
-docker run -p 8080:8080 sdcsoftsolutions/devopsup:v1.0.2
+docker run -p 8080:8080 sdcsoftsolutions/devopsup:v1.0.3
 ```
 
 Luego, la API estará disponible en:
@@ -229,20 +230,37 @@ Luego, la API estará disponible en:
 http://localhost:8080
 ```
 
-Evidencia de la publicación del tag `v1.0.2` en Docker Hub:
+Evidencia de la publicación del tag `v1.0.3` en Docker Hub:
 
-![Tag v1.0.2 publicado en Docker Hub](docs/evidencias/dockerhub-tag-v1.0.2.png)
+![Tag v1.0.3 publicado en Docker Hub](docs/evidencias/dockerhub-tag-v1.0.3.png)
 
 ### Secretos de GitHub Actions
 
-La publicación en Docker Hub utiliza los siguientes secretos configurados en GitHub:
+La publicación en Docker Hub y el despliegue en Render utilizan los siguientes secretos configurados en GitHub:
 
 - `DOCKERHUB_USERNAME`
 - `DOCKERHUB_TOKEN`
+- `RENDER_DEPLOY_HOOK_URL`
 
 ### Despliegue continuo (CD)
 
-El despliegue automático mediante Deploy Hook (desafío opcional) no está implementado. Actualmente el pipeline llega hasta la publicación de la imagen en Docker Hub. Queda como trabajo futuro.
+El despliegue continuo automático está **implementado** mediante Deploy Hook de Render.
+
+Flujo:
+
+1. Se publica un tag SemVer `vX.Y.Z`.
+2. GitHub Actions construye y publica la imagen `sdcsoftsolutions/devopsup:vX.Y.Z`.
+3. El workflow llama al Deploy Hook de Render con `imgURL=docker.io/sdcsoftsolutions/devopsup:vX.Y.Z`.
+4. Render despliega esa versión y deja el servicio disponible en:
+
+```text
+https://devopsup-api.onrender.com/swagger/index.html
+```
+
+Evidencias:
+
+![Deploy exitoso en Render vía Deploy Hook (v1.0.3)](docs/evidencias/deploy-hook-render-v1.0.3.png)
+![Swagger en Render](docs/evidencias/swagger-render.png)
 
 ## Observabilidad y monitoreo
 
@@ -289,8 +307,9 @@ flowchart LR
     MERGE --> TAG[Release / tag SemVer vX.Y.Z]
     TAG --> PUB[GitHub Actions<br/>docker build + push]
     PUB --> HUB[(Docker Hub<br/>devopsup:vX.Y.Z)]
+    HUB --> RENDER[Render<br/>Deploy Hook + imgURL]
 
-    APP[API en ejecución] -.->|OTLP| GRAF[Grafana Cloud<br/>Dashboard Golden Signals]
+    APP[API en ejecución en Render] -.->|OTLP| GRAF[Grafana Cloud<br/>Dashboard Golden Signals]
 ```
 
 | Componente | Herramienta |
@@ -301,8 +320,8 @@ flowchart LR
 | Tests | xUnit + Moq |
 | Versionado y releases | SemVer + GitHub Releases |
 | Registro de imágenes | Docker Hub |
+| Hosting/CD | Render (Deploy Hook) |
 | Observabilidad | OpenTelemetry + Grafana Cloud |
-| Hosting | No aplica (CD opcional no implementado) |
 
 ### 2. Justificación técnica y decisiones de diseño
 
@@ -317,14 +336,14 @@ flowchart LR
 
 - **GitHub Flow (trunk-based simplificado):** `main` siempre estable, ramas cortas y PRs obligatorios.
 - **Protección de ramas:** ruleset activo sobre `main` con PR obligatorio y checks `Lint`, `Unit Tests` y `Build` requeridos.
-- **Versionado:** SemVer mediante Releases de GitHub con tags `vX.Y.Z`, que disparan la publicación de la imagen con ese mismo tag.
+- **Versionado:** SemVer mediante Releases de GitHub con tags `vX.Y.Z`, que disparan la publicación de la imagen con ese mismo tag y el despliegue automático en Render.
 
 ### 3. Aplicación de la filosofía DevOps
 
 **Primera Forma: flujo y consistencia**
 
-- *Tareas 100% automatizadas:* verificación de formato, ejecución de tests, compilación, build de la imagen Docker y publicación en Docker Hub con el tag de versión.
-- *Entorno idéntico:* el mismo `Dockerfile`, con versiones fijas de imagen base, se usa en local (`docker compose`) y en el pipeline de publicación. Lo que se prueba es lo que se publica.
+- *Tareas 100% automatizadas:* verificación de formato, ejecución de tests, compilación, build de la imagen Docker, publicación en Docker Hub con el tag de versión y deploy automático en Render por Deploy Hook.
+- *Entorno idéntico:* el mismo `Dockerfile`, con versiones fijas de imagen base, se usa en local (`docker compose`) y en el pipeline de publicación. Lo que se prueba es lo que se publica y despliega.
 
 **Segunda Forma: feedback rápido y Andon Cord**
 
@@ -362,4 +381,4 @@ flowchart LR
 |--------------------|---------------------------|
 | Esperas y tareas manuales de compilación, prueba y empaquetado | CI y publicación automatizadas con GitHub Actions |
 | Bugs detectados tarde, en producción | Lint y tests en cada PR (Andon Cord) más monitoreo con Golden Signals |
-| Configuración manual y entornos inconsistentes ("en mi máquina funciona") | Dockerfile versionado y Docker Compose reproducible con un solo comando |
+| Configuración manual y entornos inconsistentes ("en mi máquina funciona") | Dockerfile versionado, Docker Compose reproducible y despliegue automatizado por tag en Render |
