@@ -179,6 +179,12 @@ El proyecto utiliza Semantic Versioning (SemVer) para el etiquetado de releases,
 - MINOR: nuevas funcionalidades compatibles con versiones anteriores.
 - PATCH: correcciones de errores compatibles con versiones anteriores.
 
+Cada versión se publica como un **Release de GitHub** asociado a un tag `vX.Y.Z` sobre `main`. Ese tag es el que dispara la publicación de la imagen Docker, de modo que el artefacto en Docker Hub queda trazable a un release y a un commit concretos.
+
+La última versión publicada es **`v1.0.2`**.
+
+![Release v1.0.2 en GitHub](docs/evidencias/release-v1.0.2.png)
+
 ## Publicación Docker
 
 El proyecto cuenta con un workflow de GitHub Actions que construye y publica automáticamente la imagen Docker en Docker Hub.
@@ -188,7 +194,7 @@ El proyecto cuenta con un workflow de GitHub Actions que construye y publica aut
 El workflow `.github/workflows/docker-publish.yml` se ejecuta automáticamente cuando se publica un tag con formato SemVer, por ejemplo:
 
 ```text
-v1.0.1
+v1.0.2
 ```
 
 El workflow realiza las siguientes tareas:
@@ -202,19 +208,19 @@ El workflow realiza las siguientes tareas:
 La imagen publicada está disponible en:
 
 ```text
-sdcsoftsolutions/devopsup:v1.0.1
+sdcsoftsolutions/devopsup:v1.0.2
 ```
 
 Para descargarla:
 
 ```bash
-docker pull sdcsoftsolutions/devopsup:v1.0.1
+docker pull sdcsoftsolutions/devopsup:v1.0.2
 ```
 
 Para ejecutar la imagen:
 
 ```bash
-docker run -p 8080:8080 sdcsoftsolutions/devopsup:v1.0.1
+docker run -p 8080:8080 sdcsoftsolutions/devopsup:v1.0.2
 ```
 
 Luego, la API estará disponible en:
@@ -222,6 +228,10 @@ Luego, la API estará disponible en:
 ```text
 http://localhost:8080
 ```
+
+Evidencia de la publicación del tag `v1.0.2` en Docker Hub:
+
+![Tag v1.0.2 publicado en Docker Hub](docs/evidencias/dockerhub-tag-v1.0.2.png)
 
 ### Secretos de GitHub Actions
 
@@ -289,6 +299,7 @@ flowchart LR
 | Linter | `dotnet format` |
 | Runner de CI | GitHub Actions (`ubuntu-latest`) |
 | Tests | xUnit + Moq |
+| Versionado y releases | SemVer + GitHub Releases |
 | Registro de imágenes | Docker Hub |
 | Observabilidad | OpenTelemetry + Grafana Cloud |
 | Hosting | No aplica (CD opcional no implementado) |
@@ -306,7 +317,7 @@ flowchart LR
 
 - **GitHub Flow (trunk-based simplificado):** `main` siempre estable, ramas cortas y PRs obligatorios.
 - **Protección de ramas:** ruleset activo sobre `main` con PR obligatorio y checks `Lint`, `Unit Tests` y `Build` requeridos.
-- **Versionado:** SemVer mediante tags `vX.Y.Z`, que disparan la publicación de la imagen con ese mismo tag.
+- **Versionado:** SemVer mediante Releases de GitHub con tags `vX.Y.Z`, que disparan la publicación de la imagen con ese mismo tag.
 
 ### 3. Aplicación de la filosofía DevOps
 
