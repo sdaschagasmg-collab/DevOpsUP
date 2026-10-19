@@ -1,9 +1,19 @@
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
+using ProductsApi.Middleware;
 using ProductsApi.Services;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Logs estructurados en JSON para los logs de la aplicación (ILogger)
+builder.Logging.ClearProviders();
+builder.Logging.AddJsonConsole(options =>
+{
+    options.IncludeScopes = false;
+    options.TimestampFormat = "yyyy-MM-ddTHH:mm:ss.fffZ ";
+    options.UseUtcTimestamp = true;
+});
 
 // OpenTelemetry
 builder.Services.AddOpenTelemetry()
@@ -32,6 +42,9 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddSingleton<IProductService, InMemoryProductService>();
 
 var app = builder.Build();
+
+// Logging JSON por request (timestamp, level, path, status_code). Debe ir primero.
+app.UseMiddleware<JsonRequestLoggingMiddleware>();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

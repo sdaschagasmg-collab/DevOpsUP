@@ -1,12 +1,11 @@
 ﻿using System.Diagnostics;
 using System.Text.Json;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace ProductsApi.Middleware;
 
-//Mide la duración de cada request, que después te sirve para la latencia(p50/p95).
-//El level depende del status: 2xx/3xx Information, 4xx Warning, 5xx Error.
-//Si hay una excepción no controlada, la registra como 500.
+// Mide la duración de cada request, que después sirve para la latencia (p50/p95).
+// El level depende del status: 2xx/3xx Information, 4xx Warning, 5xx Error.
+// Si hay una excepción no controlada, la registra como 500.
 
 public class JsonRequestLoggingMiddleware
 {
